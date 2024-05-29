@@ -649,15 +649,25 @@ void Emitter<Writer>::_write_json(NodeScalar const& C4_RESTRICT sc, NodeType fla
     if(C4_UNLIKELY(flags.has_anchor()))
         if(m_opts.json_error_flags() & EmitOptions::JSON_ERR_ON_ANCHOR)
             _RYML_CB_ERR(m_tree->callbacks(), "JSON does not have anchors");
-    // use double quoted style...
-    // if it is a key (mandatory in JSON)
-    // if the style is marked quoted
-    bool dquoted = ((flags & (KEY|VALQUO))
-                    || (scalar_style_json_choose(sc.scalar) &  SCALAR_DQUO)); // choose the style
-    if(dquoted)
-        _write_scalar_json_dquo(sc.scalar);
+    if(sc.scalar.len)
+    {
+        // use double quoted style...
+        // if it is a key (mandatory in JSON)
+        // if the style is marked quoted
+        bool dquoted = ((flags & (KEY|VALQUO))
+                        || (scalar_style_json_choose(sc.scalar) & SCALAR_DQUO)); // choose the style
+        if(dquoted)
+            _write_scalar_json_dquo(sc.scalar);
+        else
+            this->Writer::_do_write(sc.scalar);
+    }
     else
-        this->Writer::_do_write(sc.scalar);
+    {
+        if(sc.scalar.str)
+            this->Writer::_do_write("\"\"");
+        else
+            this->Writer::_do_write("null");
+    }
 }
 
 template<class Writer>
